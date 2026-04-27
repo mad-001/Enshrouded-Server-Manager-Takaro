@@ -51,7 +51,12 @@ export class Bridge {
       await this.lifecycle.start();
     }
 
-    this.tailer.on('line', (line) => this.players.ingestLine(line));
+    this.tailer.on('line', (line) => {
+      this.players.ingestLine(line);
+      if (this.shouldForwardLogLine(line)) {
+        this.ws.sendGameEvent('log', { msg: line });
+      }
+    });
     this.tailer.start();
 
     this.players.on('player-connected', (p: Player) => {
@@ -110,6 +115,22 @@ export class Bridge {
     };
     run();
     this.rescanTimer = setInterval(run, SAVE_RESCAN_INTERVAL_MS);
+  }
+
+  // Drop pure engine-bookkeeping spam from the live log feed so Takaro's console
+  // shows what an admin actually wants to see (player events, saves, errors, drops, etc.)
+  // rather than per-frame water-dispenser creation lines.
+  private shouldForwardLogLine(line: string): boolean {
+    if (!line || line.length < 10) return false;
+    const noise = [
+      '[Server][Water]',
+      '[SessionPlayer]',
+      'replication state',
+      'Processing pending client Messages',
+      'Could not prune',
+    ];
+    for (const n of noise) if (line.includes(n)) return false;
+    return true;
   }
 
   private scheduleBackupPrune(): void {

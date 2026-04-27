@@ -1,4 +1,7 @@
+import { createRequire } from 'node:module';
 import { logger } from '../logger.js';
+
+const require = createRequire(import.meta.url);
 
 // Signal Enshrouded to shut down gracefully via CTRL_C_EVENT.
 // Mirrors EnshroudedServerService.cs from Crazyloon/Enshrouded-Server-Manager
