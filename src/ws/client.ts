@@ -97,9 +97,13 @@ export class TakaroWsClient extends EventEmitter {
         logger.info('Server confirmed WebSocket connection');
         break;
       case 'identifyResponse': {
-        const p = msg.payload as { gameServerId?: string; error?: string } | undefined;
+        const p = msg.payload as { gameServerId?: string; error?: unknown } | undefined;
         if (p?.error) {
-          logger.error(`Identification failed: ${p.error}`);
+          // Error is a serialized Takaro error object: { message, name, http, details? }
+          const err = p.error as { message?: string; name?: string; http?: number; details?: unknown };
+          const summary = err.message || JSON.stringify(p.error);
+          logger.error(`Identification failed: ${summary} [name=${err.name ?? '?'} http=${err.http ?? '?'}]`);
+          if (err.details) logger.error(`Error details: ${JSON.stringify(err.details)}`);
           break;
         }
         if (p?.gameServerId) {

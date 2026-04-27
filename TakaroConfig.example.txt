@@ -1,10 +1,2 @@
 registrationToken=YOUR_TAKARO_REGISTRATION_TOKEN
-serverName=Bloodlines No Mercy
-enshroudedServerPath=C:\GameServers\Enshrouded
-enshroudedServerExe=C:\GameServers\Enshrouded\enshrouded_server.exe
-enshroudedServerJson=C:\GameServers\Enshrouded\enshrouded_server.json
-enshroudedLogPath=C:\GameServers\Enshrouded\logs\enshrouded_server.log
-enshroudedSavePath=C:\GameServers\Enshrouded\savegame
-steamCmdPath=C:\steamcmd\steamcmd.exe
-backupDirectory=C:\GameServers\Enshrouded\savegame_backups
-manageServerProcess=false
+serverName=Enshrouded

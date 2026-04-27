@@ -4,6 +4,11 @@ import path from 'node:path';
 export interface BridgeConfig {
   registrationToken: string;
   serverName: string;
+  // What gets sent as identityToken on the Takaro `identify` message.
+  // Defaults to serverName so the value is exactly what you put in the config.
+  // Override only if you need to match a specific value already stored in Takaro
+  // for a pre-existing gameserver.
+  identityToken: string;
   enshroudedServerPath: string;
   enshroudedServerExe: string;
   enshroudedServerJson: string;
@@ -35,15 +40,16 @@ export function loadConfig(configPath = 'TakaroConfig.txt'): BridgeConfig {
     kv[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
   }
 
-  const required = ['registrationToken', 'serverName', 'enshroudedServerPath'];
+  const required = ['registrationToken', 'serverName'];
   for (const key of required) {
     if (!kv[key]) throw new Error(`Missing required config: ${key}`);
   }
 
-  const base = kv.enshroudedServerPath;
+  const base = kv.enshroudedServerPath || 'C:\\GameServers\\Enshrouded';
   return {
     registrationToken: kv.registrationToken,
     serverName: kv.serverName,
+    identityToken: kv.identityToken || kv.serverName,
     enshroudedServerPath: base,
     enshroudedServerExe: kv.enshroudedServerExe || path.join(base, 'enshrouded_server.exe'),
     enshroudedServerJson: kv.enshroudedServerJson || path.join(base, 'enshrouded_server.json'),

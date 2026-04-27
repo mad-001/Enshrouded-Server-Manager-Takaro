@@ -31,10 +31,11 @@ export class Bridge {
   constructor(private config: BridgeConfig) {
     fs.mkdirSync(config.stateDirectory, { recursive: true });
     this.ws = new TakaroWsClient(config.takaroWsUrl, {
-      identityToken: `enshrouded-${config.serverName}`,
+      identityToken: config.identityToken,
       registrationToken: config.registrationToken,
       name: config.serverName,
     });
+    logger.info(`Identifying as identityToken='${config.identityToken}' name='${config.serverName}'`);
     this.tailer = new LogTailer(config.enshroudedLogPath);
     this.lifecycle = new ServerLifecycle(config);
     this.bans = new BanManager(config.enshroudedServerJson);
