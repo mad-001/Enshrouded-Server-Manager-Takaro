@@ -6,10 +6,6 @@ players join as usual.
 
 It supports **Enshrouded 1.0** (game build 1267041) and the earlier build 1024233.
 
-> This repo used to hold a Node.js bridge that read the server log. The in-game mod replaces it: the bridge could
-> only see joins and leaves, the mod also handles chat, item delivery, teleports, kick and ban. The bridge code is
-> still here for reference (see [Legacy bridge](#legacy-bridge)).
-
 ## Download
 
 Get `takaro-enshrouded-plugin.zip` from the latest Enshrouded release on
@@ -46,8 +42,3 @@ Messages from Takaro appear in game chat under the name of an online player.
 Everything that changes between game builds is in `takaro/enshrouded-gamedata.json` (one section per build; the
 log prints `game build: <n>` at start). After a game update, adding a section there brings every feature back with
 the same DLL; Takaro shows which features are waiting for it.
-
-## Legacy bridge
-
-The Node.js bridge (`src/`, `package.json`, `service-install.ps1`) tails `logs/enshrouded_server.log` and edits
-`enshrouded_server.json` for bans. It is kept for reference; the mod above replaces it.
