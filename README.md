@@ -12,7 +12,7 @@ Get `takaro-enshrouded-plugin.zip` from this repo's
 [Releases](https://github.com/mad-001/Enshrouded-Server-Manager-Takaro/releases). Every new version of the mod is
 published there automatically. Full guide: https://mad-001.github.io/Enshrouded-Server-Manager-Takaro/
 
-The mod is part of Takaro's official connectors; the source is in
+It is a community connector; the source is in
 [`gettakaro/connectors` `games/enshrouded`](https://github.com/gettakaro/connectors/tree/main/games/enshrouded).
 
 ## Install
