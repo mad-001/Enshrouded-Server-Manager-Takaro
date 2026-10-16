@@ -1,0 +1,74 @@
+# Publishes every new Enshrouded connector release from gettakaro/connectors as a release here,
+# with takaro-enshrouded-plugin.zip attached, so the GitHub Pages download button is always current.
+name: Release
+
+on:
+  schedule:
+    - cron: '17,47 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      UPSTREAM: gettakaro/connectors
+      # Published here once the DLL carries game data for this build (Enshrouded 1.0).
+      GAME_BUILD: '1267041'
+    steps:
+      - name: Find the latest Enshrouded release
+        id: up
+        run: |
+          tag=$(gh api "repos/$UPSTREAM/releases?per_page=100" --jq \
+            '[.[] | select(.draft == false and .prerelease == false and (.tag_name | test("^enshrouded-v[0-9]+\\.[0-9]+\\.[0-9]+$")))] | .[0].tag_name // ""')
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#enshrouded-v}" >> "$GITHUB_OUTPUT"
+          echo "latest upstream: ${tag:-none}"
+
+      - name: Decide
+        id: d
+        env:
+          V: ${{ steps.up.outputs.version }}
+        run: |
+          publish=false
+          if [ -n "$V" ]; then
+            if gh release view "v$V" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "v$V already published"
+            else
+              mkdir -p dl
+              gh release download "enshrouded-v$V" -R "$UPSTREAM" -D dl -p takaro-enshrouded-plugin.zip -p SHA256SUMS
+              if unzip -p dl/takaro-enshrouded-plugin.zip '*/dbghelp.dll' | grep -a -q "\"$GAME_BUILD\""; then
+                publish=true
+              else
+                echo "v$V has no game data for build $GAME_BUILD yet"
+              fi
+            fi
+          fi
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+
+      - name: Publish
+        if: steps.d.outputs.publish == 'true'
+        env:
+          TAG: ${{ steps.up.outputs.tag }}
+          V: ${{ steps.up.outputs.version }}
+        run: |
+          cd dl
+          sha256sum takaro-enshrouded-plugin.zip
+          {
+            echo "Enshrouded Takaro mod $V."
+            echo
+            echo "Install: stop the server, copy \`dbghelp.dll\` from \`takaro-enshrouded-plugin.zip\` next to"
+            echo "\`enshrouded_server.exe\`, start it, and paste your Takaro registration token into \`takaro/plugin.json\`."
+            echo "Full guide: https://mad-001.github.io/Enshrouded-Server-Manager-Takaro/"
+            echo
+            echo "Built and published by Takaro: https://github.com/$UPSTREAM/releases/tag/$TAG"
+          } > notes.md
+          gh release create "v$V" takaro-enshrouded-plugin.zip SHA256SUMS -R "$GITHUB_REPOSITORY" \
+            --title "Enshrouded Server Manager $V" --notes-file notes.md --latest

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enshrouded Server Manager - Takaro</title>
+    <meta name="description" content="Connect an Enshrouded dedicated server to Takaro with one dbghelp.dll: player events, chat, item delivery, teleports, kick and ban. Supports Enshrouded 1.0.">
+    <meta name="keywords" content="Takaro, Enshrouded server manager, Enshrouded dedicated server, Enshrouded 1.0, dbghelp.dll, Enshrouded Discord chat, game server manager">
+    <meta name="author" content="mad-001">
+    <link rel="canonical" href="https://mad-001.github.io/Enshrouded-Server-Manager-Takaro/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Enshrouded Server Manager - Takaro">
+    <meta property="og:description" content="One dbghelp.dll connects an Enshrouded dedicated server to Takaro.">
+    <meta property="og:url" content="https://mad-001.github.io/Enshrouded-Server-Manager-Takaro/">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Enshrouded Server Manager for Takaro","applicationCategory":"Game server management","operatingSystem":"Windows","offers":{"@type":"Offer","price":"0"}}
+    </script>
+    <style>
+        :root {
+            --bg: #0b1622;
+            --panel: rgba(20, 28, 38, 0.97);
+            --line: rgba(56, 189, 248, 0.16);
+            --text: #dbe4ee;
+            --muted: #94a3b8;
+            --cyan: #38bdf8;
+            --cyan-soft: #7dd3fc;
+            --amber: #fbbf24;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(1100px 600px at 50% -10%, #123047 0%, transparent 60%),
+                        linear-gradient(160deg, #0a141f 0%, #0c1c2c 55%, #0a1420 100%);
+            background-attachment: fixed;
+            min-height: 100vh; color: var(--text); line-height: 1.7;
+            padding: 24px 16px 64px;
+        }
+        .wrap { max-width: 1120px; margin: 0 auto; }
+        .layout { display: grid; grid-template-columns: 220px 1fr; gap: 28px; align-items: start; margin-top: 32px; }
+        /* Contents sidebar */
+        .toc { position: sticky; top: 24px; background: rgba(20,28,38,0.85); border: 1px solid var(--line);
+            border-radius: 12px; padding: 18px 16px; }
+        .toc h3 { color: var(--cyan-soft); font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 12px; }
+        .toc a { display: block; color: var(--muted); padding: 7px 10px; border-radius: 7px; font-size: 0.92em; text-decoration: none; }
+        .toc a:hover { color: var(--cyan-soft); background: rgba(56,189,248,0.08); text-decoration: none; }
+        .content { min-width: 0; }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            border-radius: 16px; padding: 56px 32px 48px; margin-bottom: 40px;
+            background:
+              radial-gradient(900px 220px at 50% -30%, rgba(56,189,248,0.28), transparent),
+              linear-gradient(135deg, #0b1622 0%, #10243a 60%, #123047 100%);
+            border: 1px solid var(--line);
+            box-shadow: 0 24px 70px rgba(0,0,0,0.45);
+        }
+        h1 {
+            font-size: clamp(2em, 6vw, 3em); line-height: 1.1; margin-bottom: 16px; letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #38bdf8 0%, #7dd3fc 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .subtitle { color: #c3cedd; font-size: clamp(1em, 2.5vw, 1.15em); max-width: 640px; margin: 0 auto 28px; }
+        .subtitle strong { color: #fff; }
+        .cta { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%);
+            color: #fff; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: 600;
+            box-shadow: 0 6px 20px rgba(14,165,233,0.35);
+            transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(14,165,233,0.5); }
+        .btn-secondary { background: linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 100%); box-shadow: 0 6px 20px rgba(29,78,216,0.3); }
+
+        /* Sections */
+        section { margin-bottom: 40px; }
+        h2 { font-size: 1.5em; margin-bottom: 16px; color: var(--cyan);
+             border-bottom: 2px solid rgba(56,189,248,0.22); padding-bottom: 10px; }
+        p { margin-bottom: 14px; color: #c9d4e0; }
+        a { color: var(--cyan); text-decoration: none; }
+        a:hover { color: var(--cyan-soft); text-decoration: underline; }
+
+        ol { margin: 12px 0 16px 22px; }
+        li { margin-bottom: 10px; }
+
+        code { background: rgba(0,0,0,0.4); color: var(--amber); padding: 2px 7px; border-radius: 5px;
+            font-family: 'Cascadia Code', 'Courier New', monospace; font-size: 0.86em; }
+        pre { background: rgba(0,0,0,0.5); padding: 18px 20px; border-radius: 10px; overflow-x: auto;
+            margin: 14px 0 18px; border: 1px solid var(--line); }
+        pre code { background: none; padding: 0; color: #e2e8f0; font-size: 0.88em; line-height: 1.6; }
+
+        .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 22px; }
+        .feature-card { background: rgba(56,189,248,0.05); border: 1px solid var(--line);
+            border-radius: 12px; padding: 18px 20px; }
+        .feature-card strong { color: var(--cyan-soft); display: block; margin-bottom: 6px; font-size: 1.02em; }
+        .feature-card span { color: var(--muted); font-size: 0.95em; }
+
+        .note-box { background: rgba(251,191,36,0.07); border-left: 4px solid var(--amber);
+            padding: 14px 18px; margin: 18px 0; border-radius: 0 8px 8px 0; color: #d8cdb0; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 8px;
+            background: rgba(0,0,0,0.18); border-radius: 10px; overflow: hidden; }
+        th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid rgba(56,189,248,0.1); }
+        th { color: var(--cyan-soft); font-size: 0.9em; background: rgba(56,189,248,0.06); }
+        tr:last-child td { border-bottom: none; }
+        td code { font-size: 0.82em; }
+
+        footer { text-align: center; color: var(--muted); font-size: 0.9em; padding-top: 28px;
+            border-top: 1px solid rgba(56,189,248,0.12); }
+
+        @media (max-width: 860px) {
+            .layout { grid-template-columns: 1fr; }
+            .toc { position: static; }
+        }
+        @media (max-width: 640px) {
+            .feature-grid { grid-template-columns: 1fr; }
+            .hero { padding: 40px 22px 36px; }
+            .btn { width: 100%; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <header class="hero">
+        <h1>Enshrouded Server Manager</h1>
+        <p class="subtitle">Connect your <strong>Enshrouded</strong> dedicated server to <a href="https://takaro.io/pricing/?via=zach550">Takaro</a> — player join/leave, chat, item delivery, teleports, and full admin control.</p>
+        <div class="cta">
+            <a href="https://github.com/mad-001/Enshrouded-Server-Manager-Takaro/releases" class="btn">Download Latest Release</a>
+            <a href="https://takaro.io/pricing/?via=zach550" class="btn btn-secondary">Sign Up for Takaro (Free)</a>
+        </div>
+    </header>
+
+    <div class="layout">
+    <nav class="toc">
+        <h3>Contents</h3>
+        <a href="#overview">Overview</a>
+        <a href="#supported">Supported Versions</a>
+        <a href="#install">Install</a>
+        <a href="#config">Configure</a>
+        <a href="#verify">Start &amp; Verify</a>
+        <a href="#actions">Actions</a>
+        <a href="#updates">Game Updates</a>
+        <a href="#help">Help &amp; Support</a>
+    </nav>
+    <main class="content">
+
+    <section id="overview">
+        <h2>Overview</h2>
+        <p>Enshrouded Server Manager is a single <code>dbghelp.dll</code> that loads with your Enshrouded dedicated server. It runs inside the server and holds the secure WebSocket to Takaro itself. Only the server needs it; players join as usual.</p>
+        <div class="feature-grid">
+            <div class="feature-card"><strong>Player Events</strong><span>Join, leave, chat, deaths and kills tracked in Takaro in real time.</span></div>
+            <div class="feature-card"><strong>Admin Actions</strong><span>Broadcast, give items, teleport, kick/ban/unban, read inventory &amp; location.</span></div>
+            <div class="feature-card"><strong>Discord Chat</strong><span>Game chat to Discord and Discord back into game chat through Takaro modules.</span></div>
+            <div class="feature-card"><strong>One DLL does it all</strong><span>Copy one file next to the server and paste your Takaro token.</span></div>
+        </div>
+    </section>
+
+    <section id="supported">
+        <h2>Supported Versions</h2>
+        <p>Supports <strong>Enshrouded 1.0</strong> (game build 1267041) and the earlier build 1024233, on Windows and under Wine/Proton on Linux. The mod is part of Takaro's official connectors (<a href="https://github.com/gettakaro/connectors/tree/main/games/enshrouded"><code>gettakaro/connectors</code></a>); every new version is published to this page's releases automatically.</p>
+    </section>
+
+    <section id="install">
+        <h2>Install</h2>
+        <ol>
+            <li>Download <code>takaro-enshrouded-plugin.zip</code> from the <a href="https://github.com/mad-001/Enshrouded-Server-Manager-Takaro/releases">latest release</a>.</li>
+            <li>Stop the server and copy <code>dbghelp.dll</code> from the zip next to <code>enshrouded_server.exe</code>:
+                <pre><code>enshrouded_server.exe
+dbghelp.dll                  (the mod)
+takaro\plugin.json            (created at the first start — edit this)</code></pre>
+            </li>
+            <li>On Linux under Wine/Proton, set <code>WINEDLLOVERRIDES=dbghelp=n,b</code> so the server loads the mod.</li>
+        </ol>
+    </section>
+
+    <section id="config">
+        <h2>Configure</h2>
+        <ol>
+            <li>In Takaro: <strong>Game servers → Create new game server → Generic</strong>, copy your <strong>registration token</strong>. The server appears in Takaro by itself when it connects.</li>
+            <li>Start the server once; it creates <code>takaro\plugin.json</code>. Paste the token and save — the mod connects within a few seconds:</li>
+        </ol>
+        <pre><code>{
+  "registrationToken": "paste-your-token-here",
+  "identityToken": "",
+  "name": "",
+  "url": "wss://connect.takaro.io/",
+  "token": ""
+}</code></pre>
+    </section>
+
+    <section id="verify">
+        <h2>Start &amp; Verify</h2>
+        <ol>
+            <li>Start the server. <code>dbghelp.dll</code> loads with it automatically.</li>
+            <li><code>takaro\plugin.log</code> shows <code>connected to Takaro as "&lt;name&gt;"</code>.</li>
+            <li>The server shows <strong>online</strong> in the Takaro dashboard within seconds.</li>
+            <li>Have a player join &amp; chat — <code>player-connected</code> and <code>chat-message</code> appear in Takaro.</li>
+        </ol>
+    </section>
+
+    <section id="actions">
+        <h2>Actions Takaro Can Run</h2>
+        <table>
+            <tr><th>Action</th><th>What it does</th></tr>
+            <tr><td><code>getPlayers</code> / <code>getPlayerLocation</code> / <code>getPlayerInventory</code></td><td>Read who is online, where they are and what they carry.</td></tr>
+            <tr><td><code>sendMessage</code></td><td>Broadcast to game chat, shown under an online player's name.</td></tr>
+            <tr><td><code>giveItem</code> / <code>teleportPlayer</code></td><td>Item delivery (shop, rewards) and teleports.</td></tr>
+            <tr><td><code>kickPlayer</code> / <code>banPlayer</code> / <code>unbanPlayer</code> / <code>listBans</code></td><td>Moderation by SteamID, Admin-group players included.</td></tr>
+            <tr><td><code>listItems</code> / <code>listEntities</code></td><td>Item and creature catalogue with in-game English names.</td></tr>
+            <tr><td><code>executeConsoleCommand</code></td><td>Built-in commands: <code>players</code>, <code>say</code>, <code>whisper</code>, <code>give</code>, <code>item</code>, <code>teleport</code>, <code>kick</code>, <code>save-and-shutdown</code>.</td></tr>
+        </table>
+    </section>
+
+    <section id="updates">
+        <h2>Game Updates</h2>
+        <p>Everything that changes between game builds lives in <code>takaro\enshrouded-gamedata.json</code>, one section per build. The log prints <code>game build: &lt;n&gt;</code> at start. Keep the server on a supported build by switching automatic game updates off; after a game update, a new section in that file brings every feature back with the same DLL.</p>
+    </section>
+
+    <section id="help">
+        <h2>Help &amp; Support</h2>
+        <p>Questions, setup help, or want to share your server? The Takaro community and the maintainers are glad to help.</p>
+        <ul>
+            <li><strong>Takaro Discord</strong> — <a href="https://discord.gg/5aXJ8r8znJ">discord.gg/5aXJ8r8znJ</a>: ask questions, share setups, and connect with other server admins.</li>
+            <li><strong>Takaro docs</strong> — <a href="https://docs.takaro.io">docs.takaro.io</a>.</li>
+            <li><strong>Bugs &amp; requests</strong> — <a href="https://github.com/mad-001/Enshrouded-Server-Manager-Takaro/issues">GitHub Issues</a> (include your <code>takaro\plugin.log</code>).</li>
+        </ul>
+    </section>
+
+    </main>
+    </div>
+
+    <footer>
+        <a href="https://discord.gg/5aXJ8r8znJ">Takaro Discord</a> ·
+        <a href="https://github.com/mad-001/Enshrouded-Server-Manager-Takaro">GitHub</a> ·
+        <a href="https://github.com/mad-001/Enshrouded-Server-Manager-Takaro/releases">Releases</a> ·
+        <a href="https://github.com/mad-001/Enshrouded-Server-Manager-Takaro/issues">Issues</a>
+    </footer>
+
+</div>
+</body>
+</html>
