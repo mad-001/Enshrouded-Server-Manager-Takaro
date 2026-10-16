@@ -36,6 +36,9 @@ Tested in game on Enshrouded 1.0 on 2026-10-15:
 - Give items, teleport players
 - Kill events (creature and weapon) and death events (position)
 - Kick, ban and unban, including Admin-group players
+- Character levels: the console commands `levels` and `level <player>` give each online player's level and
+  experience, so Takaro modules can act on them (for example, kicking a first-time player whose character is far
+  above your regulars)
 
 Messages from Takaro appear in game chat under the name of an online player.
 
