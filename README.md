@@ -10,17 +10,12 @@ It supports **Enshrouded 1.0** (game build 1267041) and the earlier build 102423
 > only see joins and leaves, the mod also handles chat, item delivery, teleports, kick and ban. The bridge code is
 > still here for reference (see [Legacy bridge](#legacy-bridge)).
 
-## Where the mod lives
-
-The mod is part of Takaro's official connectors: [gettakaro/connectors `games/enshrouded`](https://github.com/gettakaro/connectors/tree/main/games/enshrouded).
-Enshrouded 1.0 support is [gettakaro/connectors#524](https://github.com/gettakaro/connectors/pull/524); once it is
-merged, Takaro publishes the release automatically.
-
 ## Download
 
-From [gettakaro/connectors releases](https://github.com/gettakaro/connectors/releases), take
-`takaro-enshrouded-plugin.zip` from the latest `enshrouded-vX.Y.Z` release. Releases up to
-v0.7.0 support game build 1024233 only; Enshrouded 1.0 support ships in the release after #524 is merged.
+Get `takaro-enshrouded-plugin.zip` from the latest Enshrouded release on
+[gettakaro/connectors releases](https://github.com/gettakaro/connectors/releases). The mod is part of Takaro's
+official connectors, so every new version is published there automatically. The source is in
+[`games/enshrouded`](https://github.com/gettakaro/connectors/tree/main/games/enshrouded).
 
 ## Install
 
