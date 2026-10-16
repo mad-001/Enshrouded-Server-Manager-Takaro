@@ -179,15 +179,13 @@ takaro\plugin.json            (created at the first start — edit this)</code><
         <h2>Configure</h2>
         <ol>
             <li>In Takaro: <strong>Game servers → Create new game server → Generic</strong>, copy your <strong>registration token</strong>. The server appears in Takaro by itself when it connects.</li>
-            <li>Start the server once; it creates <code>takaro\plugin.json</code>. Paste the token and save — the mod connects within a few seconds:</li>
+            <li>Start the server once; it creates <code>takaro\plugin.json</code>. Paste your token, put your server's name into <code>identityToken</code> and save — the mod connects within a few seconds:</li>
         </ol>
         <pre><code>{
   "registrationToken": "paste-your-token-here",
-  "identityToken": "",
-  "name": "",
-  "url": "wss://connect.takaro.io/",
-  "token": ""
+  "identityToken": "name-your-server"
 }</code></pre>
+        <p>Takaro creates the game server under that name and recognizes it by it from then on, so pick a name no other server in your Takaro uses and keep it.</p>
     </section>
 
     <section id="verify">

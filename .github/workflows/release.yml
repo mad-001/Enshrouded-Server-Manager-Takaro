@@ -125,7 +125,7 @@ jobs:
           mkdir -p pkg/takaro
           cp "$dll" pkg/
           cp "src/$GAMEDATA" pkg/takaro/
-          printf '{\n  "registrationToken": "<your Takaro registration token>",\n  "identityToken": "",\n  "name": "",\n  "url": "wss://connect.takaro.io/",\n  "token": ""\n}\n' > pkg/takaro/plugin.json.example
+          printf '{\n  "registrationToken": "paste-your-token-here",\n  "identityToken": "name-your-server"\n}\n' > pkg/takaro/plugin.json.example
           (cd pkg && zip -q -r ../takaro-enshrouded-plugin.zip .)
           sha256sum takaro-enshrouded-plugin.zip pkg/dbghelp.dll | sed 's| pkg/| |' > SHA256SUMS
           cat SHA256SUMS

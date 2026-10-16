@@ -19,7 +19,18 @@ It is a community connector; the source is in
 2. In Takaro, go to **Game servers**, click **Create new game server** and choose **Generic** to see your
    registration token. The server appears in Takaro by itself when it connects.
 3. Start the server. It creates `takaro/plugin.json` next to `enshrouded_server.exe`. Paste your registration
-   token into `registrationToken` and save; the mod connects within a few seconds.
+   token into `registrationToken`, put your server's name into `identityToken` and save; the mod connects within
+   a few seconds:
+
+   ```json
+   {
+     "registrationToken": "paste-your-token-here",
+     "identityToken": "name-your-server"
+   }
+   ```
+
+   Takaro creates the game server under that name and recognizes it by it from then on, so pick a name no other
+   server in your Takaro uses and keep it.
 4. `takaro/plugin.log` shows `connected to Takaro as "<name>"` and the server turns online in Takaro.
 
 On Linux under Wine/Proton, set `WINEDLLOVERRIDES=dbghelp=n,b`. To remove the mod, stop the server and delete
