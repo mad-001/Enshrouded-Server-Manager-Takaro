@@ -214,7 +214,7 @@ takaro\plugin.json            (created at the first start — edit this)</code><
 
     <section id="updates">
         <h2>Game Updates</h2>
-        <p>Everything that changes between game builds lives in <code>takaro\enshrouded-gamedata.json</code>, one section per build. The log prints <code>game build: &lt;n&gt;</code> at start. Keep the server on a supported build by switching automatic game updates off; after a game update, a new section in that file brings every feature back with the same DLL.</p>
+        <p>Everything that changes between game builds lives in <code>takaro\enshrouded-gamedata.json</code>, one section per build. The log prints <code>game build: &lt;n&gt;</code> at start. After a game update the mod works out the new build's section from the game itself, saves it to that file with the note <code>derived automatically</code> and uses it, so the same DLL keeps working. Any feature it could not set up shows as degraded in Takaro while the rest keeps running, and a newer release brings it back.</p>
     </section>
 
     <section id="help">

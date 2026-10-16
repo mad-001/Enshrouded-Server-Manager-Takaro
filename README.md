@@ -24,14 +24,14 @@ It is a community connector; the source is in
    token into `registrationToken` and save; the mod connects within a few seconds.
 4. `takaro/plugin.log` shows `connected to Takaro as "<name>"` and the server turns online in Takaro.
 
-On Linux under Wine/Proton, set `WINEDLLOVERRIDES=dbghelp=n,b`. Keep the server on a supported game build by
-switching automatic game updates off. To remove the mod, stop the server and delete `dbghelp.dll`.
+On Linux under Wine/Proton, set `WINEDLLOVERRIDES=dbghelp=n,b`. To remove the mod, stop the server and delete
+`dbghelp.dll`.
 
 ## What it does
 
 Tested in game on Enshrouded 1.0 on 2026-10-15:
 
-- Player joined / left events, player list, location and inventory
+- Player joined / left events, player list (with in-game character names), location and inventory
 - Player chat to Takaro (and to Discord through a Takaro module), Discord and Takaro messages into game chat
 - Give items, teleport players
 - Kill events (creature and weapon) and death events (position)
@@ -42,5 +42,7 @@ Messages from Takaro appear in game chat under the name of an online player.
 ## Game updates
 
 Everything that changes between game builds is in `takaro/enshrouded-gamedata.json` (one section per build; the
-log prints `game build: <n>` at start). After a game update, adding a section there brings every feature back with
-the same DLL; Takaro shows which features are waiting for it.
+log prints `game build: <n>` at start). After a game update the mod works out the new build's section from the
+game itself, saves it to that file with the note `derived automatically` and uses it, so the same DLL keeps
+working. Any feature it could not set up shows as degraded in Takaro while the rest keeps running, and a newer
+release brings it back.
