@@ -1,124 +1,58 @@
-# Enshrouded Takaro Bridge
+# Enshrouded Takaro Mod
 
-A Node.js service that connects an Enshrouded dedicated server to Takaro's WebSocket gateway. Replaces the previous `takaro.dll` + `winmm.dll` injection approach with a fully external bridge — the game runs vanilla, the bridge can be restarted independently of the server.
+Connects an Enshrouded dedicated server to [Takaro](https://takaro.io) with one file: `dbghelp.dll`, placed next to
+`enshrouded_server.exe`. The mod runs inside the server and connects outbound to Takaro, so there is nothing else to
+run and no port to forward. Players do not install anything.
+
+It supports **Enshrouded 1.0** (game build 1267041) and the earlier build 1024233.
+
+> This repo used to hold a Node.js bridge that read the server log. The in-game mod replaces it: the bridge could
+> only see joins and leaves, the mod also handles chat, item delivery, teleports, kick and ban. The bridge code is
+> still here for reference (see [Legacy bridge](#legacy-bridge)).
+
+## Where the mod lives
+
+The mod is part of Takaro's official connectors: [gettakaro/connectors `games/enshrouded`](https://github.com/gettakaro/connectors/tree/main/games/enshrouded).
+Enshrouded 1.0 support is [gettakaro/connectors#524](https://github.com/gettakaro/connectors/pull/524); once it is
+merged, Takaro publishes the release automatically.
+
+## Download
+
+From [gettakaro/connectors releases](https://github.com/gettakaro/connectors/releases), take
+`takaro-enshrouded-plugin.zip` from the latest `enshrouded-vX.Y.Z` release (not a pre-release). Releases up to
+v0.7.0 support game build 1024233 only; Enshrouded 1.0 support ships in the release after #524 is merged.
+
+## Install
+
+1. Stop the server and copy `dbghelp.dll` from the zip next to `enshrouded_server.exe`.
+2. In Takaro, go to **Game servers**, click **Create new game server** and choose **Generic** to see your
+   registration token. You do not create the server yourself; it appears in Takaro when it connects.
+3. Start the server. It creates `takaro/plugin.json` next to `enshrouded_server.exe`. Paste your registration
+   token into `registrationToken` and save; the mod connects within a few seconds, no restart needed.
+4. `takaro/plugin.log` shows `connected to Takaro as "<name>"` and the server turns online in Takaro.
+
+On Linux under Wine/Proton, set `WINEDLLOVERRIDES=dbghelp=n,b`. Turn off automatic game updates so the server stays
+on a supported build. To remove the mod, stop the server and delete `dbghelp.dll`.
 
 ## What it does
 
-| Capability | Status |
-|---|---|
-| Player connect / disconnect events | ✅ Log tail with peer-correlated Steam ID matching |
-| `getPlayers` / `getPlayer` / `testReachability` | ✅ |
-| `getPlayerLocation` | ✅ Last-known from teleport log lines, `(0,0,0)` otherwise |
-| `getPlayerInventory` | Stub — game has no external API |
-| `executeConsoleCommand` | ✅ Echo success so downstream Takaro hooks fire |
-| `shutdown` | ✅ Graceful via `CTRL_C_EVENT` (game saves cleanly), 30s timeout, force-kill fallback |
-| `listBans` | ✅ Read from `enshrouded_server.json` |
-| `banPlayer` | ✅ When `accountIDHash` is known (via save parser); falls back to "ban manually in-game once" message |
-| `unbanPlayer` | ✅ By Steam ID (if known) or by name match |
-| `kickPlayer` | Stub — Enshrouded only supports `/kick` from in-game admin chat |
-| `sendMessage` / `teleportPlayer` / `giveItem` | Stub — no external API |
-| Backups | ✅ Timestamped folders, retention pruning |
-| SteamCMD updates | ✅ Wrapper around the existing `auto_update.bat` workflow |
-| Server start / stop / restart | Optional (`manageServerProcess` flag); off by default so `Monitor.ps1` keeps owning the process |
+Tested in game on Enshrouded 1.0 on 2026-10-15:
 
-## Architecture
+- Player joined / left events, player list, location and inventory
+- Player chat to Takaro (and to Discord through a Takaro module), Discord and Takaro messages into game chat
+- Give items, teleport players
+- Kill events (creature and weapon) and death events (position)
+- Kick, ban and unban, including Admin-group players
 
-The game runs **vanilla** — no DLL injection. The bridge runs as a separate Windows service alongside the server:
+Enshrouded has no server sender for chat, so messages from Takaro appear under the name of an online player.
 
-```
-┌──────────────────────────────┐         ┌────────────────────────┐
-│  enshrouded_server.exe       │         │  enshrouded-bridge     │
-│  ──────────────────────────  │         │  ──────────────────    │
-│  writes logs/                │ ──────▶ │  log tail              │
-│  writes savegame/            │ ──────▶ │  save parser           │
-│  reads enshrouded_server.json│ ◀────── │  ban manager           │
-│  receives CTRL_C_EVENT       │ ◀────── │  win32 (koffi)         │
-└──────────────────────────────┘         │                        │
-                                          │  WebSocket             │
-                                          └─────────┬──────────────┘
-                                                    │
-                                                    ▼
-                                          wss://connect.takaro.io/
-```
+## Game updates
 
-## Steam ID ↔ accountIDHash mapping
+Everything that changes between game builds is in `takaro/enshrouded-gamedata.json` (one section per build; the
+log prints `game build: <n>` at start). A game update needs a new section there, not a new DLL. Until then, features
+whose game code moved switch themselves off and Takaro shows which ones.
 
-The trick that makes programmatic bans work: the world save shards (`savegame/3ad85aea-N`) embed a table of `(accountIDHash, characterName)` pairs. The bridge:
+## Legacy bridge
 
-1. Periodically parses the latest shard and records `characterName → accountIDHash` mappings to `state/steam-hash-cache.json`.
-2. When a player connects, the log tail gives us `(steamId, characterName)`. If we already know `characterName → hash` from the save, we record `steamId → hash`.
-3. Once `steamId → hash` is known, `banPlayer` from Takaro can write to `bannedAccounts[]` directly.
-
-For brand-new players, ban once in-game (`/ban` in admin chat) so the entry lands in the JSON. The next save parse picks up their hash, and from then on programmatic bans for that Steam ID work.
-
-## Setup
-
-```powershell
-# 1. Install dependencies (needs Node 20+)
-cd Bridge
-npm install
-
-# 2. Configure
-copy TakaroConfig.example.txt TakaroConfig.txt
-notepad TakaroConfig.txt   # paste your registrationToken, set paths
-
-# 3. Build
-npm run build
-
-# 4. Run interactively to verify
-npm start
-
-# 5. Install as Windows service (elevated PowerShell)
-.\service-install.ps1
-```
-
-## Config reference (`TakaroConfig.txt`)
-
-| Key | Default |
-|---|---|
-| `registrationToken` | (required) |
-| `serverName` | (required) |
-| `enshroudedServerPath` | (required) e.g. `C:\GameServers\Enshrouded` |
-| `enshroudedServerExe` | `<path>\enshrouded_server.exe` |
-| `enshroudedServerJson` | `<path>\enshrouded_server.json` |
-| `enshroudedLogPath` | `<path>\logs\enshrouded_server.log` |
-| `enshroudedSavePath` | `<path>\savegame` |
-| `steamCmdPath` | `C:\steamcmd\steamcmd.exe` |
-| `backupDirectory` | `<path>\savegame_backups` |
-| `manageServerProcess` | `false` (let `Monitor.ps1` own it) |
-| `takaroWsUrl` | `wss://connect.takaro.io/` |
-| `stateDirectory` | `./state` |
-
-## Cutover from the DLL
-
-One-time, server-stopped:
-1. Stop the server (the DLL holds `takaro.dll` open, so it must be stopped to delete).
-2. Delete `takaro.dll` and `winmm.dll` from the Enshrouded folder.
-3. Install the bridge service per above.
-4. Start the server.
-
-After that single stop, every bridge change is `Restart-Service EnshroudedBridge` — game keeps running.
-
-## Layout
-
-```
-Bridge/
-├── src/
-│   ├── index.ts              entry, signal handlers
-│   ├── bridge.ts             orchestrator
-│   ├── config.ts             TakaroConfig.txt loader
-│   ├── logger.ts             winston rotating logs
-│   ├── ws/                   Takaro WebSocket protocol + client
-│   ├── server/               lifecycle, win32 (koffi), process tracking
-│   ├── log-tail/             chokidar/tail wrapper
-│   ├── players/              tracker + types
-│   ├── save/                 KSC1 shard parser (character table)
-│   ├── bans/                 enshrouded_server.json read/write + steam→hash cache
-│   ├── backup/               timestamped folder backups
-│   ├── update/               SteamCMD wrapper
-│   └── handlers/             one entry per Takaro action
-├── package.json
-├── tsconfig.json
-├── service-install.ps1       NSSM installer
-└── TakaroConfig.example.txt
-```
+The Node.js bridge (`src/`, `package.json`, `service-install.ps1`) tails `logs/enshrouded_server.log` and edits
+`enshrouded_server.json` for bans. It is no longer maintained; use the mod above, and do not run both on the same server.
