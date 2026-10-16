@@ -1,4 +1,4 @@
-# Enshrouded Takaro Mod
+# Enshrouded Server Manager - Takaro
 
 Connects an Enshrouded dedicated server to [Takaro](https://takaro.io) with one file: `dbghelp.dll`, placed next to
 `enshrouded_server.exe`. The mod runs inside the server and connects outbound to Takaro, so there is nothing else to
