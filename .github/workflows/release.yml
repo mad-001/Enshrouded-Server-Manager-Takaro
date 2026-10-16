@@ -1,5 +1,8 @@
-# Publishes every new Enshrouded connector release from gettakaro/connectors as a release here,
-# with takaro-enshrouded-plugin.zip attached, so the GitHub Pages download button is always current.
+# Keeps this repo's Releases current, so the GitHub Pages download button always has the newest mod.
+# 1. A Takaro release (gettakaro/connectors enshrouded-vX.Y.Z) with Enshrouded 1.0 game data is republished
+#    here as vX.Y.Z; the source builds below are then removed.
+# 2. Until then the mod is built from source (gettakaro/connectors main once it has the 1.0 port, else the
+#    port's branch on mad-001/connectors) and published as vX.Y.Z-build.<commit> whenever that code changes.
 name: Release
 
 on:
@@ -20,10 +23,13 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       UPSTREAM: gettakaro/connectors
-      # Published here once the DLL carries game data for this build (Enshrouded 1.0).
+      FORK: mad-001/connectors
+      FORK_BRANCH: feat/enshrouded-1.0-port
+      GAMEDATA: games/enshrouded/mod/gamedata/enshrouded-gamedata.json
+      # Published once the DLL carries game data for this build (Enshrouded 1.0).
       GAME_BUILD: '1267041'
     steps:
-      - name: Find the latest Enshrouded release
+      - name: Find the latest Takaro release
         id: up
         run: |
           tag=$(gh api "repos/$UPSTREAM/releases?per_page=100" --jq \
@@ -37,24 +43,43 @@ jobs:
         env:
           V: ${{ steps.up.outputs.version }}
         run: |
-          publish=false
+          mode=none
           if [ -n "$V" ]; then
             if gh release view "v$V" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
               echo "v$V already published"
+              mode=done
             else
               mkdir -p dl
               gh release download "enshrouded-v$V" -R "$UPSTREAM" -D dl -p takaro-enshrouded-plugin.zip -p SHA256SUMS
-              if unzip -p dl/takaro-enshrouded-plugin.zip '*/dbghelp.dll' | grep -a -q "\"$GAME_BUILD\""; then
-                publish=true
+              if unzip -p dl/takaro-enshrouded-plugin.zip '*dbghelp.dll' | grep -a -q "\"$GAME_BUILD\""; then
+                mode=republish
               else
                 echo "v$V has no game data for build $GAME_BUILD yet"
               fi
             fi
           fi
-          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          if [ "$mode" = none ]; then
+            # no Takaro release with 1.0 yet: build from source, Takaro main first, else the port branch
+            repo=$UPSTREAM ref=main
+            if ! gh api "repos/$UPSTREAM/contents/$GAMEDATA?ref=main" --jq .content 2>/dev/null | base64 -d | grep -q "\"$GAME_BUILD\""; then
+              repo=$FORK ref=$FORK_BRANCH
+            fi
+            sha=$(gh api "repos/$repo/commits/$ref" --jq .sha)
+            ver=$(gh api "repos/$repo/contents/games/enshrouded/mod/src/common.h?ref=$sha" --jq .content | base64 -d |
+              sed -n 's/.*TAKARO_PLUGIN_VERSION "\([0-9.]*\)".*release-please.*/\1/p')
+            tag="v${ver}-build.${sha:0:7}"
+            if gh release view "$tag" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "$tag already published"
+            else
+              mode=build
+            fi
+            { echo "repo=$repo"; echo "sha=$sha"; echo "build_tag=$tag"; } >> "$GITHUB_OUTPUT"
+            echo "source: $repo@${sha:0:7} -> $tag"
+          fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
 
-      - name: Publish
-        if: steps.d.outputs.publish == 'true'
+      - name: Publish the Takaro release
+        if: steps.d.outputs.mode == 'republish'
         env:
           TAG: ${{ steps.up.outputs.tag }}
           V: ${{ steps.up.outputs.version }}
@@ -72,3 +97,50 @@ jobs:
           } > notes.md
           gh release create "v$V" takaro-enshrouded-plugin.zip SHA256SUMS -R "$GITHUB_REPOSITORY" \
             --title "Enshrouded Server Manager $V" --notes-file notes.md --latest
+          # the official release replaces the source builds
+          for t in $(gh release list -R "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '.[].tagName' | grep -- '-build\.' || true); do
+            gh release delete "$t" -R "$GITHUB_REPOSITORY" --cleanup-tag --yes
+          done
+
+      - name: Check out the mod source
+        if: steps.d.outputs.mode == 'build'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.d.outputs.repo }}
+          ref: ${{ steps.d.outputs.sha }}
+          path: src
+
+      - name: Build and publish
+        if: steps.d.outputs.mode == 'build'
+        env:
+          REPO: ${{ steps.d.outputs.repo }}
+          SHA: ${{ steps.d.outputs.sha }}
+          TAG: ${{ steps.d.outputs.build_tag }}
+        run: |
+          curl -fsSL https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz | tar -xJ -C "$RUNNER_TEMP"
+          export ZIG="$RUNNER_TEMP/zig-linux-x86_64-0.13.0/zig"
+          ./src/games/enshrouded/mod/build.sh
+          dll=src/games/enshrouded/mod/build/dbghelp.dll
+          grep -a -q "\"$GAME_BUILD\"" "$dll"
+          mkdir -p pkg/takaro
+          cp "$dll" pkg/
+          cp "src/$GAMEDATA" pkg/takaro/
+          printf '{\n  "registrationToken": "<your Takaro registration token>",\n  "identityToken": "",\n  "name": "",\n  "url": "wss://connect.takaro.io/",\n  "token": ""\n}\n' > pkg/takaro/plugin.json.example
+          (cd pkg && zip -q -r ../takaro-enshrouded-plugin.zip .)
+          sha256sum takaro-enshrouded-plugin.zip pkg/dbghelp.dll | sed 's| pkg/| |' > SHA256SUMS
+          cat SHA256SUMS
+          {
+            echo "Enshrouded Takaro mod ${TAG#v}, built from source: https://github.com/$REPO/commit/$SHA"
+            echo
+            echo "Supports Enshrouded 1.0 (game build $GAME_BUILD). This build is published automatically until Takaro's own"
+            echo "release with Enshrouded 1.0 is out; that release then replaces it."
+            echo
+            echo "Install: stop the server, copy \`dbghelp.dll\` from \`takaro-enshrouded-plugin.zip\` next to"
+            echo "\`enshrouded_server.exe\`, start it, and paste your Takaro registration token into \`takaro/plugin.json\`."
+            echo "Full guide: https://mad-001.github.io/Enshrouded-Server-Manager-Takaro/"
+          } > notes.md
+          old=$(gh release list -R "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '.[].tagName' | grep -- '-build\.' || true)
+          gh release create "$TAG" takaro-enshrouded-plugin.zip SHA256SUMS -R "$GITHUB_REPOSITORY" \
+            --title "Enshrouded Server Manager ${TAG#v}" --notes-file notes.md --latest
+          # keep only the newest source build
+          for t in $old; do gh release delete "$t" -R "$GITHUB_REPOSITORY" --cleanup-tag --yes; done

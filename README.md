@@ -8,9 +8,7 @@ It supports **Enshrouded 1.0** (game build 1267041) and the earlier build 102423
 
 ## Download
 
-Get `takaro-enshrouded-plugin.zip` from this repo's
-[Releases](https://github.com/mad-001/Enshrouded-Server-Manager-Takaro/releases). Every new version of the mod is
-published there automatically. Full guide: https://mad-001.github.io/Enshrouded-Server-Manager-Takaro/
+**[Download and install guide → mad-001.github.io/Enshrouded-Server-Manager-Takaro](https://mad-001.github.io/Enshrouded-Server-Manager-Takaro/)**
 
 It is a community connector; the source is in
 [`gettakaro/connectors` `games/enshrouded`](https://github.com/gettakaro/connectors/tree/main/games/enshrouded).
