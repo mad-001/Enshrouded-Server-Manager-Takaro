@@ -40,7 +40,8 @@ Tested in game on Enshrouded 1.0 on 2026-10-15:
   experience, so Takaro modules can act on them (for example, kicking a first-time player whose character is far
   above your regulars)
 
-Messages from Takaro appear in game chat under the name of an online player.
+Messages from Takaro (and from Discord through a Takaro module) appear in game chat as a notice, styled like the
+game's own join messages. Players show with their character name everywhere: joins, chat and the player list.
 
 ## Game updates
 
