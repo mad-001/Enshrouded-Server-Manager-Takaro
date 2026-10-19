@@ -4,7 +4,7 @@ Connects an Enshrouded dedicated server to [Takaro](https://takaro.io) with one 
 `enshrouded_server.exe`. The mod runs inside the server and connects outbound to Takaro. Only the server needs it;
 players join as usual.
 
-It supports **Enshrouded 1.0** (game build 1267041) and the earlier build 1024233.
+It supports **Enshrouded 1.0** (game builds 1267041 and 1269579) and the earlier build 1024233.
 
 ## Download
 
@@ -42,7 +42,8 @@ Tested in game on Enshrouded 1.0 on 2026-10-15:
 
 - Player joined / left events, player list (with in-game character names), location and inventory
 - Player chat to Takaro (and to Discord through a Takaro module), Discord and Takaro messages into game chat
-- Give items, teleport players
+- Give items (the console command `give <player> <itemCode> [amount] [level]` can also set the item level),
+  teleport players
 - Kill events (creature and weapon) and death events (position)
 - Kick, ban and unban, including Admin-group players
 - Character levels: the console commands `levels` and `level <player>` give each online player's level and
@@ -57,5 +58,7 @@ game's own join messages. Players show with their character name everywhere: joi
 Everything that changes between game builds is in `takaro/enshrouded-gamedata.json` (one section per build; the
 log prints `game build: <n>` at start). After a game update the mod works out the new build's section from the
 game itself, saves it to that file with the note `derived automatically` and uses it, so the same DLL keeps
-working. Any feature it could not set up shows as degraded in Takaro while the rest keeps running, and a newer
+working. The item list follows the same way: on a new build the mod rebuilds it once from the server's own
+`enshrouded_server.kfc` and saves it as `takaro/enshrouded-items.json`, so giving items and the item catalogue
+keep working. Any feature it could not set up shows as degraded in Takaro while the rest keeps running, and a newer
 release brings it back.

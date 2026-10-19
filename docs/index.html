@@ -159,7 +159,7 @@
 
     <section id="supported">
         <h2>Supported Versions</h2>
-        <p>Supports <strong>Enshrouded 1.0</strong> (game build 1267041) and the earlier build 1024233, on Windows and under Wine/Proton on Linux. It is a community connector, with its source in <a href="https://github.com/gettakaro/connectors/tree/main/games/enshrouded"><code>gettakaro/connectors</code></a>; every new version is published to this page's releases automatically.</p>
+        <p>Supports <strong>Enshrouded 1.0</strong> (game builds 1267041 and 1269579) and the earlier build 1024233, on Windows and under Wine/Proton on Linux. It is a community connector, with its source in <a href="https://github.com/gettakaro/connectors/tree/main/games/enshrouded"><code>gettakaro/connectors</code></a>; every new version is published to this page's releases automatically.</p>
     </section>
 
     <section id="install">
@@ -207,13 +207,13 @@ takaro\plugin.json            (created at the first start — edit this)</code><
             <tr><td><code>giveItem</code> / <code>teleportPlayer</code></td><td>Item delivery (shop, rewards) and teleports.</td></tr>
             <tr><td><code>kickPlayer</code> / <code>banPlayer</code> / <code>unbanPlayer</code> / <code>listBans</code></td><td>Moderation by SteamID, Admin-group players included.</td></tr>
             <tr><td><code>listItems</code> / <code>listEntities</code></td><td>Item and creature catalogue with in-game English names.</td></tr>
-            <tr><td><code>executeConsoleCommand</code></td><td>Built-in commands: <code>players</code>, <code>say</code>, <code>whisper</code>, <code>give</code>, <code>item</code>, <code>teleport</code>, <code>kick</code>, <code>save-and-shutdown</code>.</td></tr>
+            <tr><td><code>executeConsoleCommand</code></td><td>Built-in commands: <code>players</code>, <code>say</code>, <code>whisper</code>, <code>give</code> (with an optional item level), <code>item</code>, <code>teleport</code>, <code>kick</code>, <code>save-and-shutdown</code>.</td></tr>
         </table>
     </section>
 
     <section id="updates">
         <h2>Game Updates</h2>
-        <p>Everything that changes between game builds lives in <code>takaro\enshrouded-gamedata.json</code>, one section per build. The log prints <code>game build: &lt;n&gt;</code> at start. After a game update the mod works out the new build's section from the game itself, saves it to that file with the note <code>derived automatically</code> and uses it, so the same DLL keeps working. Any feature it could not set up shows as degraded in Takaro while the rest keeps running, and a newer release brings it back.</p>
+        <p>Everything that changes between game builds lives in <code>takaro\enshrouded-gamedata.json</code>, one section per build. The log prints <code>game build: &lt;n&gt;</code> at start. After a game update the mod works out the new build's section from the game itself, saves it to that file with the note <code>derived automatically</code> and uses it, so the same DLL keeps working. The item list follows the same way: on a new build the mod rebuilds it once from the server's own <code>enshrouded_server.kfc</code> and saves it as <code>takaro\enshrouded-items.json</code>, so giving items and the item catalogue keep working. Any feature it could not set up shows as degraded in Takaro while the rest keeps running, and a newer release brings it back.</p>
     </section>
 
     <section id="help">
