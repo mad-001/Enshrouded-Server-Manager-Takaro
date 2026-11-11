@@ -43,7 +43,22 @@ ship their own `dbghelp.dll` and by default use it instead of the one next to `e
 the setting the mod is never loaded: no `takaro/plugin.log`, no `[Takaro]` lines in the console, and the server
 runs as if nothing were installed.
 
-Set this environment variable on the game server so Wine loads the mod first:
+**Running Wine yourself (no Docker)?** The simplest fix is to set it once in Wine's own settings; nothing else
+needs to change. As the same Linux user that runs the server (add `WINEPREFIX=/path/to/prefix` in front if you
+use your own prefix):
+
+```bash
+winecfg
+```
+
+→ **Libraries** tab → type `dbghelp` under "New override for library" → **Add** → select it → **Edit** →
+**Native then Builtin** → OK. Or the same in one command:
+
+```bash
+wine reg add 'HKCU\Software\Wine\DllOverrides' /v dbghelp /d native,builtin /f
+```
+
+Then restart the server. Otherwise, set this environment variable on the game server so Wine loads the mod first:
 
 ```text
 WINEDLLOVERRIDES=dbghelp=n,b
@@ -51,6 +66,8 @@ WINEDLLOVERRIDES=dbghelp=n,b
 
 | How your server runs | Where to set it |
 |---|---|
+| Started by hand | `WINEDLLOVERRIDES="dbghelp=n,b" wine64 enshrouded_server.exe` (or `wine`) |
+| systemd service | Under `[Service]`: `Environment=WINEDLLOVERRIDES=dbghelp=n,b`, then `systemctl daemon-reload` and restart |
 | Docker Compose | Under `environment:` of the server: `WINEDLLOVERRIDES: "dbghelp=n,b"` |
 | `docker run` | `-e WINEDLLOVERRIDES="dbghelp=n,b"` |
 | Unraid template | Edit the container, add a **Variable**: key `WINEDLLOVERRIDES`, value `dbghelp=n,b` |

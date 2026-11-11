@@ -70,9 +70,11 @@ jobs:
           Enshrouded Server Manager - Takaro
 
           1. Stop the server. Copy dbghelp.dll next to enshrouded_server.exe.
-          2. Linux (Wine / Proton, any Docker image or panel): REQUIRED. Wine uses its own
-             dbghelp.dll instead of this one unless you set this environment variable on the
-             game server:
+          2. Linux (Wine / Proton): REQUIRED. Wine uses its own dbghelp.dll instead of this one.
+             Running Wine yourself: run winecfg as the server's user -> Libraries -> add
+             "dbghelp" -> Edit -> "Native then Builtin" (or start the server with
+             WINEDLLOVERRIDES="dbghelp=n,b" wine64 enshrouded_server.exe).
+             Docker image or panel: set this environment variable on the game server:
                WINEDLLOVERRIDES=dbghelp=n,b
              Without it the mod never loads: no takaro\plugin.log and no [Takaro] lines.
              If the image already sets WINEDLLOVERRIDES, add it with a semicolon, e.g.
