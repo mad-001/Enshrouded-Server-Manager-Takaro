@@ -137,6 +137,7 @@
         <a href="#overview">Overview</a>
         <a href="#supported">Supported Versions</a>
         <a href="#install">Install</a>
+        <a href="#linux">Linux: Wine &amp; Proton</a>
         <a href="#config">Configure</a>
         <a href="#verify">Start &amp; Verify</a>
         <a href="#actions">Actions</a>
@@ -171,8 +172,29 @@
 dbghelp.dll                  (the mod)
 takaro\plugin.json            (created at the first start — edit this)</code></pre>
             </li>
-            <li>On Linux under Wine/Proton, set <code>WINEDLLOVERRIDES=dbghelp=n,b</code> so the server loads the mod.</li>
+            <li><strong>Linux (Wine / Proton): required.</strong> Set <code>WINEDLLOVERRIDES=dbghelp=n,b</code> on the server, or the mod never loads. See <a href="#linux">Linux: Wine &amp; Proton</a>.</li>
         </ol>
+    </section>
+
+    <section id="linux">
+        <h2>Linux: Wine &amp; Proton</h2>
+        <p>The mod works under 64-bit Wine (wine64 or a WoW64 build) and Proton, but it needs one setting. Wine and Proton ship their own <code>dbghelp.dll</code> and by default use it instead of the one next to <code>enshrouded_server.exe</code>. Without the setting the mod is never loaded: no <code>takaro\plugin.log</code>, no <code>[Takaro]</code> lines in the console, and the server runs as if nothing were installed.</p>
+        <p>Set this environment variable on the game server so Wine loads the mod first:</p>
+        <pre><code>WINEDLLOVERRIDES=dbghelp=n,b</code></pre>
+        <table>
+            <tr><th>How your server runs</th><th>Where to set it</th></tr>
+            <tr><td>Docker Compose</td><td>Under <code>environment:</code> of the server: <code>WINEDLLOVERRIDES: "dbghelp=n,b"</code></td></tr>
+            <tr><td><code>docker run</code></td><td><code>-e WINEDLLOVERRIDES="dbghelp=n,b"</code></td></tr>
+            <tr><td>Unraid template</td><td>Edit the container, add a <strong>Variable</strong>: key <code>WINEDLLOVERRIDES</code>, value <code>dbghelp=n,b</code></td></tr>
+            <tr><td>Pterodactyl, AMP or another panel</td><td>The server's environment / startup variables</td></tr>
+            <tr><td>Your own start script</td><td><code>export WINEDLLOVERRIDES="dbghelp=n,b"</code> before <code>wine enshrouded_server.exe</code></td></tr>
+        </table>
+        <p>If your image already sets <code>WINEDLLOVERRIDES</code>, add the mod to that value with a semicolon instead of replacing it, for example <code>dbghelp=n,b;mscoree,mshtml=</code>. Restart the server after the change.</p>
+        <div class="note-box"><strong>Can't set the variable?</strong> Some images overwrite it in their start script. Store the same setting once in the server's Wine prefix instead (run it as the user the server runs as, with the server's <code>WINEPREFIX</code>; for Docker, inside the container), then restart the server:
+        <pre><code>wine reg add 'HKCU\Software\Wine\AppDefaults\enshrouded_server.exe\DllOverrides' /v dbghelp /d native,builtin /f</code></pre>
+        A prefix that is recreated (new container volume, reinstall) loses this; the variable does not.</div>
+        <p><strong>Check that it loaded.</strong> <code>takaro\plugin.log</code> appears and shows <code>connected to Takaro</code>. If there is no <code>plugin.log</code> at all, Wine still used its own copy. To see which one it used, start the server once with <code>WINEDEBUG=+loaddll</code> added: a <code>Loaded</code> line for the <code>dbghelp.dll</code> in the server folder ending in <code>: native</code> means the mod loaded; a line for <code>C:\windows\system32\dbghelp.dll</code> ending in <code>: builtin</code> means the setting did not reach the server. Remove <code>WINEDEBUG</code> again afterwards.</p>
+        <p><strong>Wine versions.</strong> Wine development releases from 11.8 on usually load the mod without the setting; older Wine, including stable Wine 11.0, and Proton need it. Set it on every version; it does no harm.</p>
     </section>
 
     <section id="config">
@@ -192,7 +214,7 @@ takaro\plugin.json            (created at the first start — edit this)</code><
         <h2>Start &amp; Verify</h2>
         <ol>
             <li>Start the server. <code>dbghelp.dll</code> loads with it automatically.</li>
-            <li><code>takaro\plugin.log</code> shows <code>connected to Takaro as "&lt;name&gt;"</code>.</li>
+            <li><code>takaro\plugin.log</code> shows <code>connected to Takaro as "&lt;name&gt;"</code>. No <code>plugin.log</code> at all means the server never loaded the mod: on Linux, see <a href="#linux">Wine &amp; Proton</a>.</li>
             <li>The server shows <strong>online</strong> in the Takaro dashboard within seconds.</li>
             <li>Have a player join &amp; chat — <code>player-connected</code> and <code>chat-message</code> appear in Takaro.</li>
         </ol>

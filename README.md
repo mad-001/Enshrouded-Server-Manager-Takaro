@@ -33,8 +33,51 @@ It is a community connector; the source is in
    server in your Takaro uses and keep it.
 4. `takaro/plugin.log` shows `connected to Takaro as "<name>"` and the server turns online in Takaro.
 
-On Linux under Wine/Proton, set `WINEDLLOVERRIDES=dbghelp=n,b`. To remove the mod, stop the server and delete
-`dbghelp.dll`.
+On Linux under Wine/Proton the setting below is required (see [Linux: Wine and Proton](#linux-wine-and-proton)).
+To remove the mod, stop the server and delete `dbghelp.dll`.
+
+## Linux: Wine and Proton
+
+The mod works under 64-bit Wine (wine64 or a WoW64 build) and Proton, but it needs one setting. Wine and Proton
+ship their own `dbghelp.dll` and by default use it instead of the one next to `enshrouded_server.exe`. Without
+the setting the mod is never loaded: no `takaro/plugin.log`, no `[Takaro]` lines in the console, and the server
+runs as if nothing were installed.
+
+Set this environment variable on the game server so Wine loads the mod first:
+
+```text
+WINEDLLOVERRIDES=dbghelp=n,b
+```
+
+| How your server runs | Where to set it |
+|---|---|
+| Docker Compose | Under `environment:` of the server: `WINEDLLOVERRIDES: "dbghelp=n,b"` |
+| `docker run` | `-e WINEDLLOVERRIDES="dbghelp=n,b"` |
+| Unraid template | Edit the container, add a **Variable**: key `WINEDLLOVERRIDES`, value `dbghelp=n,b` |
+| Pterodactyl, AMP or another panel | The server's environment / startup variables |
+| Your own start script | `export WINEDLLOVERRIDES="dbghelp=n,b"` before `wine enshrouded_server.exe` |
+
+If your image already sets `WINEDLLOVERRIDES`, add the mod to that value with a semicolon instead of replacing
+it, for example `dbghelp=n,b;mscoree,mshtml=`. Restart the server after the change.
+
+**Can't set the variable?** Some images overwrite it in their start script. Store the same setting once in the
+server's Wine prefix instead (run it as the user the server runs as, with the server's `WINEPREFIX`; for Docker,
+inside the container), then restart the server:
+
+```bash
+wine reg add 'HKCU\Software\Wine\AppDefaults\enshrouded_server.exe\DllOverrides' /v dbghelp /d native,builtin /f
+```
+
+A prefix that is recreated (new container volume, reinstall) loses this; the variable does not.
+
+**Check that it loaded.** `takaro/plugin.log` appears and shows `connected to Takaro`. If there is no
+`plugin.log` at all, Wine still used its own copy. To see which one it used, start the server once with
+`WINEDEBUG=+loaddll` added: a `Loaded` line for the `dbghelp.dll` in the server folder ending in `: native` means
+the mod loaded; a line for `C:\windows\system32\dbghelp.dll` ending in `: builtin` means the setting did not reach
+the server. Remove `WINEDEBUG` again afterwards.
+
+**Wine versions.** Wine development releases from 11.8 on usually load the mod without the setting; older Wine,
+including stable Wine 11.0, and Proton need it. Set it on every version; it does no harm.
 
 ## What it does
 

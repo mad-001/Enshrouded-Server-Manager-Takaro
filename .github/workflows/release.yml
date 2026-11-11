@@ -66,6 +66,29 @@ jobs:
           cp "$dll" pkg/
           cp "src/$GAMEDATA" pkg/takaro/
           printf '{\n  "registrationToken": "paste-your-token-here",\n  "identityToken": "name-your-server"\n}\n' > pkg/takaro/plugin.json.example
+          cat > pkg/README.txt <<'TXT'
+          Enshrouded Server Manager - Takaro
+
+          1. Stop the server. Copy dbghelp.dll next to enshrouded_server.exe.
+          2. Linux (Wine / Proton, any Docker image or panel): REQUIRED. Wine uses its own
+             dbghelp.dll instead of this one unless you set this environment variable on the
+             game server:
+               WINEDLLOVERRIDES=dbghelp=n,b
+             Without it the mod never loads: no takaro\plugin.log and no [Takaro] lines.
+             If the image already sets WINEDLLOVERRIDES, add it with a semicolon, e.g.
+               dbghelp=n,b;mscoree,mshtml=
+             If you cannot set the variable, run this once in the server's Wine prefix:
+               wine reg add "HKCU\Software\Wine\AppDefaults\enshrouded_server.exe\DllOverrides" /v dbghelp /d native,builtin /f
+             Windows servers need nothing extra.
+          3. Start the server. It creates takaro\plugin.json: paste your Takaro registration
+             token into "registrationToken", your server's name into "identityToken", save.
+          4. takaro\plugin.log shows: connected to Takaro as "<name>".
+
+          Game updates: the mod works out the new game build's values by itself
+          (takaro\enshrouded-gamedata.json, note "derived automatically"). No new download needed.
+
+          Full guide: https://mad-001.github.io/Enshrouded-Server-Manager-Takaro/
+          TXT
           (cd pkg && zip -q -r ../takaro-enshrouded-plugin.zip .)
           sha256sum takaro-enshrouded-plugin.zip pkg/dbghelp.dll | sed 's| pkg/| |' > SHA256SUMS
           cat SHA256SUMS
@@ -76,6 +99,10 @@ jobs:
             echo
             echo "Install: stop the server, copy \`dbghelp.dll\` from \`takaro-enshrouded-plugin.zip\` next to"
             echo "\`enshrouded_server.exe\`, start it, and paste your Takaro registration token into \`takaro/plugin.json\`."
+            echo
+            echo "**Linux (Wine / Proton): required.** Set \`WINEDLLOVERRIDES=dbghelp=n,b\` on the game server, or Wine"
+            echo "uses its own dbghelp.dll and the mod never loads (no \`takaro/plugin.log\`)."
+            echo "Details: https://mad-001.github.io/Enshrouded-Server-Manager-Takaro/#linux"
             echo "Full guide: https://mad-001.github.io/Enshrouded-Server-Manager-Takaro/"
           } > notes.md
           old=$(gh release list -R "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '.[].tagName' | grep -- '-build\.' || true)
